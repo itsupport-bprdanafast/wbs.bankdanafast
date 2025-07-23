@@ -1,8 +1,8 @@
 <div>
     @livewire('component.navbar')
 
-    <div class="max-w-4xl mx-auto p-6">
-        <div class="bg-white rounded-lg shadow-lg p-8">
+    <div class="max-w-4xl mx-auto md:p-6">
+        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Form Pengaduan</h1>
                 <p class="text-gray-600">Laporkan pelanggaran atau tindakan yang tidak sesuai dengan ketentuan</p>

@@ -1,4 +1,6 @@
 <div>
+    @livewire('component.navbar')
+
     <div class="max-w-2xl mx-auto space-y-6">
         <!-- Search Form -->
         <x-card>
