@@ -1,0 +1,7 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/banq1955/public_html/wbs.bankdanafast.com/
+    # Copy hanya folder public untuk Laravel
+    - /bin/cp -R * $DEPLOYPATH
+    - /bin/cp .htaccess $DEPLOYPATH 2>/dev/null || :
