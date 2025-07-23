@@ -36,6 +36,15 @@ class TrackReport extends Component
         $this->resetErrorBag();
     }
 
+    public function mount()
+    {
+        // Jika ada token dari query parameter, langsung cari
+        if (request('token')) {
+            $this->token = request('token');
+            $this->searchReport();
+        }
+    }
+
     public function render()
     {
         return view('livewire.track-report');

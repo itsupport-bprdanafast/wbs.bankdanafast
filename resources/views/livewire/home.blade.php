@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 select-none">
     <div class="max-w-6xl mx-auto p-6">
         <!-- Header -->
         <div class="text-center mb-12">
@@ -171,13 +171,22 @@
                 <h3 class="text-2xl font-bold text-cyan-700 mb-4">Lacak Status Laporan</h3>
                 <p class="text-gray-600 mb-6">Masukkan token laporan Anda untuk melihat status dan perkembangan</p>
 
-                <div class="max-w-md mx-auto flex gap-3">
-                    <div class="w-full">
-                        <x-input wire:model="token" placeholder="Contoh: WB-ABC123" class="" />
+                <form action="{{ route('status') }}" method="GET" class="max-w-md mx-auto">
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <x-input name="token" placeholder="Contoh: WB-ABC123" class="font-medium"
+                                value="{{ request('token') }}" required />
+                        </div>
+                        <x-button type="submit" color="blue" sm class="font-semibold px-6">
+                            Lacak
+                        </x-button>
                     </div>
-                    <x-button color="blue" sm class="font-semibold">
-                        Lacak
-                    </x-button>
+                </form>
+
+                <div class="mt-4">
+                    <a href="{{ route('status') }}" class="text-sm text-cyan-600 hover:text-cyan-800 underline">
+                        Atau klik di sini untuk halaman lacak laporan
+                    </a>
                 </div>
             </div>
         </div>

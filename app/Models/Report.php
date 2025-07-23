@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Report extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'token',
         'type',
@@ -17,13 +20,13 @@ class Report extends Model
         'reported_employees',
         'attachments',
         'date_incidents',
+        'gratification_value',
         'status',
         'admin_notes',
         'responded_at'
     ];
 
     protected $casts = [
-        'reported_employees' => 'array',
         'attachments' => 'array',
         'date_incidents' => 'datetime',
         'responded_at' => 'datetime'
@@ -90,17 +93,6 @@ class Report extends Model
     public function scopeByStatus($query, $status)
     {
         return $query->where('status', $status);
-    }
-
-    public function getReportedEmployeesNamesAttribute()
-    {
-        if (!$this->reported_employees) {
-            return null;
-        }
-
-        return collect($this->reported_employees)
-            ->pluck('name')
-            ->join(', ');
     }
 
     public function hasReportedEmployees()

@@ -5,7 +5,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{{ $title ?? 'Page Title' }}</title>
+    <title>{{ $title ?? 'Whistleblowing Bank Danafast' }}</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon/apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon/apple-touch-icon-dark.png') }}"
+        media="(prefers-color-scheme: dark)">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon/favicon-32x32-dark.png') }}"
+        media="(prefers-color-scheme: dark)">
+    <link rel="manifest" href="{{ asset('favicon/site.webmanifest') }}">
+    <link rel="manifest" href="{{ asset('favicon/site.webmanifest') }}" media="(prefers-color-scheme: dark)">
 
     @php
         $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);

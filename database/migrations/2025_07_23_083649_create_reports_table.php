@@ -26,6 +26,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'reviewing', 'investigating', 'resolved', 'rejected'])->default('pending');
             $table->text('admin_notes')->nullable();
             $table->timestamp('responded_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

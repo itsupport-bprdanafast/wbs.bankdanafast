@@ -12,10 +12,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <x-input wire:model="reporter_name" label="Nama Lengkap *" placeholder="Masukkan nama lengkap" />
                     <x-input wire:model="reporter_email" type="email" label="Email *" placeholder="nama@email.com" />
-                    <x-input wire:model="reporter_phone" label="No. Telepon" placeholder="08xxxxxxxxxx" />
+                    <x-input wire:model="reporter_phone" type="tel" label="No. Telepon"
+                        placeholder="08xxxxxxxxxx" />
                 </div>
                 <div class="space-y-4">
-                    <x-date label="Tanggal Kejadian *" format="DD MMMM YYYY" wire:model="date_incidents" />
+                    <x-date label="Tanggal Kejadian *" format="DD MMMM YYYY" :max-date="now()"
+                        wire:model="date_incidents" />
                     <x-textarea wire:model="description" label="Deskripsi Pengaduan *"
                         placeholder="Jelaskan detail pengaduan dengan lengkap..." rows="5" />
                 </div>

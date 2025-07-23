@@ -9,13 +9,13 @@
                     hint="Masukkan token yang Anda terima setelah membuat laporan" />
 
                 <div class="flex gap-2">
-                    <x-button type="submit" primary wire:loading.attr="disabled" sm class="flex-1">
+                    <x-button type="submit" primary wire:loading.attr="disabled" sm class="font-medium flex-1">
                         <span wire:loading.remove>Lacak Laporan</span>
                         <span wire:loading>Mencari...</span>
                     </x-button>
 
                     @if ($report)
-                        <x-button type="button" secondary wire:click="resetSearch">
+                        <x-button sm type="button" secondary wire:click="resetSearch" class="font-medium">
                             Reset
                         </x-button>
                     @endif
@@ -87,7 +87,7 @@
                     <div class="mb-6">
                         <x-label>Pegawai yang Dilaporkan</x-label>
                         <div class="mt-2 p-4 bg-gray-50 rounded-lg">
-                            <p class="text-gray-800">{{ $report->reported_employees_names }}</p>
+                            <p class="text-gray-800">{{ $report->reported_employees }}</p>
                         </div>
                     </div>
                 @endif
