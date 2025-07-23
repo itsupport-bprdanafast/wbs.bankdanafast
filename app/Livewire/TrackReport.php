@@ -9,6 +9,7 @@ class TrackReport extends Component
 {
     public $token = '';
     public $report = null;
+    public $statusHistories = [];
 
     protected $rules = [
         'token' => 'required|string|min:3'
@@ -23,17 +24,23 @@ class TrackReport extends Component
     {
         $this->validate();
 
-        $this->report = Report::where('token', strtoupper($this->token))->first();
+        $this->report = Report::with(['statusHistories' => function ($query) {
+            $query->orderBy('created_at', 'asc');
+        }])->where('token', strtoupper($this->token))->first();
 
         if (!$this->report) {
             $this->addError('token', 'Token tidak ditemukan atau tidak valid');
+            return;
         }
+
+        $this->statusHistories = $this->report->statusHistories;
     }
 
     public function resetSearch()
     {
-        $this->reset(['token', 'report']);
+        $this->reset(['token', 'report', 'statusHistories']);
         $this->resetErrorBag();
+        return redirect()->route('status');
     }
 
     public function mount()

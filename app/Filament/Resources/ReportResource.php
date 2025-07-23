@@ -145,23 +145,8 @@ class ReportResource extends Resource
                 TextColumn::make('token')
                     ->label('Token')
                     ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('type')
-                    ->label('Jenis')
-                    ->formatStateUsing(fn($state) => match ($state) {
-                        'pengaduan' => 'Pengaduan',
-                        'gratifikasi' => 'Gratifikasi',
-                        'saran_keluhan' => 'Saran / Keluhan',
-                        default => $state
-                    })
-                    ->badge()
-                    ->color(fn($state) => match ($state) {
-                        'pengaduan' => 'danger',
-                        'gratifikasi' => 'warning',
-                        'saran_keluhan' => 'info',
-                        default => 'secondary'
-                    }),
+                    ->sortable()
+                    ->copyable(),
 
                 TextColumn::make('reporter_name')
                     ->label('Pelapor')
@@ -224,14 +209,6 @@ class ReportResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('type')
-                    ->label('Jenis Laporan')
-                    ->options([
-                        'pengaduan' => 'Pengaduan',
-                        'gratifikasi' => 'Gratifikasi',
-                        'saran_keluhan' => 'Saran / Keluhan'
-                    ]),
-
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options([
@@ -246,9 +223,133 @@ class ReportResource extends Resource
                     ->label('Status Data'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('review')
+                    ->label('Review Laporan')
+                    ->icon('heroicon-o-eye')
+                    ->color('info')
+                    ->visible(fn($record) => $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Review Laporan')
+                    ->modalDescription('Apakah kamu ingin mereview laporan ini?')
+                    ->modalSubmitActionLabel('Ya, Review')
+                    ->modalCancelActionLabel('Batal')
+                    ->action(function ($record) {
+                        $record->update([
+                            'status' => 'reviewing',
+                            'responded_at' => now(),
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Laporan berhasil direview')
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('investigate')
+                    ->label('Investigasi Laporan')
+                    ->icon('heroicon-o-magnifying-glass')
+                    ->color('warning')
+                    ->visible(fn($record) => $record->status === 'reviewing')
+                    ->requiresConfirmation()
+                    ->modalHeading('Investigasi Laporan')
+                    ->modalDescription('Apakah kamu ingin investigasi laporan ini?')
+                    ->modalSubmitActionLabel('Ya, Investigasi')
+                    ->modalCancelActionLabel('Batal')
+                    ->action(function ($record) {
+                        $record->update(['status' => 'investigating']);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Status berhasil diubah ke investigasi')
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('reject_review')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn($record) => $record->status === 'reviewing')
+                    ->form([
+                        Forms\Components\Textarea::make('admin_notes')
+                            ->label('Alasan Penolakan')
+                            ->placeholder('Masukkan alasan penolakan laporan...')
+                            ->rows(3)
+                            ->required()
+                            ->maxLength(1000),
+                    ])
+                    ->modalHeading('Tolak Laporan')
+                    ->modalDescription('Silakan masukkan alasan penolakan untuk laporan ini.')
+                    ->modalSubmitActionLabel('Tolak Laporan')
+                    ->modalCancelActionLabel('Batal')
+                    ->action(function ($record, array $data) {
+                        $record->update([
+                            'status' => 'rejected',
+                            'admin_notes' => $data['admin_notes'],
+                            'responded_at' => now(),
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Laporan telah ditolak')
+                            ->danger()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('create_report')
+                    ->label('Buat Laporan')
+                    ->icon('heroicon-o-document-text')
+                    ->color('primary')
+                    ->visible(fn($record) => $record->status === 'investigating')
+                    ->form([
+                        Forms\Components\Textarea::make('admin_notes')
+                            ->label('Catatan Admin')
+                            ->placeholder('Masukkan catatan hasil investigasi...')
+                            ->rows(4)
+                            ->required()
+                            ->maxLength(1000),
+                    ])
+                    ->modalHeading('Buat Laporan Investigasi')
+                    ->modalDescription('Silakan masukkan catatan hasil investigasi untuk laporan ini.')
+                    ->modalSubmitActionLabel('Selesai')
+                    ->modalCancelActionLabel('Batal')
+                    ->extraModalFooterActions([
+                        Tables\Actions\Action::make('reject')
+                            ->label('Tolak')
+                            ->color('danger')
+                            ->requiresConfirmation()
+                            ->modalHeading('Tolak Laporan')
+                            ->modalDescription('Apakah Anda yakin ingin menolak laporan ini?')
+                            ->action(function ($record, array $data) {
+                                $record->update([
+                                    'status' => 'rejected',
+                                    'admin_notes' => $data['admin_notes'] ?? null,
+                                    'responded_at' => now(),
+                                ]);
+
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Laporan telah ditolak')
+                                    ->danger()
+                                    ->send();
+                            })
+                    ])
+                    ->action(function ($record, array $data) {
+                        $record->update([
+                            'status' => 'resolved',
+                            'admin_notes' => $data['admin_notes'],
+                            'responded_at' => now(),
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Laporan berhasil diselesaikan')
+                            ->success()
+                            ->send();
+                    }),
+
+
+                Tables\Actions\ViewAction::make('view_report')
+                    ->label('Lihat Laporan')
+                    ->visible(fn($record) => in_array($record->status, ['resolved', 'rejected'])),
+
+                // Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ForceDeleteAction::make(),
                 Tables\Actions\RestoreAction::make(),
             ])
@@ -268,6 +369,11 @@ class ReportResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
     }
 
     public static function getPages(): array

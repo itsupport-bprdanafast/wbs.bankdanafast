@@ -26,6 +26,17 @@ class Gratifikasi extends Component
     public $date_incidents = '';
     public $backup = [];
 
+    protected $rules = [
+        'reporter_name' => 'required|string|max:255',
+        'reporter_email' => 'required|email|max:255',
+        'reporter_phone' => 'nullable|string|max:20',
+        'description' => 'required|string|min:10|max:5000',
+        'reported_employees' => 'required|string|max:1000',
+        'gratification_value' => 'required|numeric|between:0,9999999999.99',
+        'date_incidents' => 'required|date|before_or_equal:today',
+        'attachments.*' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,pdf,doc,docx',
+    ];
+
     public function updatingAttachments(): void
     {
         $this->backup = $this->attachments;
@@ -58,6 +69,8 @@ class Gratifikasi extends Component
     public function submit()
     {
         try {
+            $this->validate();
+
             $attachmentFiles = collect($this->attachments)->map(function ($file) {
                 if (!($file instanceof UploadedFile)) return null;
 
@@ -89,17 +102,62 @@ class Gratifikasi extends Component
                 'gratification_value' => $this->gratification_value,
                 'attachments' => $attachmentFiles,
                 'date_incidents' => $this->date_incidents,
+                'status' => 'pending',
             ]);
 
             $this->dialog()->success(
-                title: $report->token,
-                description: 'Silakan simpan token ini untuk tracking laporan Anda.'
+                $report->token,
+                "Silakan simpan token ini untuk melacak status laporan Anda.<br>
+             <a href='" . route('status', ['token' => $report->token]) . "' 
+                class='text-blue-600 hover:text-blue-800 underline'>
+                Klik disini untuk tracking
+             </a>"
             )->send();
 
-            $this->reset();
+            if ($this->reporter_email) {
+                $this->sendReportConfirmationEmail($report);
+            }
+
+            $this->reset([
+                'reporter_name',
+                'reporter_email',
+                'reporter_phone',
+                'description',
+                'reported_employees',
+                'gratification_value',
+                'attachments',
+                'date_incidents'
+            ]);
+
+            $this->toast()->success('Laporan berhasil dikirim!')->send();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation 
+            $this->toast()->error('Periksa kembali data yang Anda masukkan.')->send();
+            throw $e;
         } catch (\Exception $e) {
+            logger("Report submission error", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => [
+                    'type' => 'gratifikasi',
+                    'reporter_name' => $this->reporter_name,
+                    'description' => substr($this->description, 0, 100) . '...'
+                ]
+            ]);
+
             report($e);
-            $this->toast()->error('Gagal mengirim pengaduan. Periksa kembali lampiran dan data lainnya.');
+            $this->toast()->error('Gagal mengirim Laporan. Silakan coba lagi atau hubungi administrator.')->send();
+        }
+    }
+
+    private function sendReportConfirmationEmail($report)
+    {
+        try {
+            // You can implement email notification here
+            // Mail::to($report->reporter_email)->send(new ReportConfirmationMail($report));
+            logger("Confirmation email should be sent to: " . $report->reporter_email);
+        } catch (\Exception $e) {
+            logger("Failed to send confirmation email", ['error' => $e->getMessage()]);
         }
     }
 
