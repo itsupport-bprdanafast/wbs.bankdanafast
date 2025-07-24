@@ -99,8 +99,11 @@
 
                                         @if ($history->notes)
                                             <div class="mt-2 p-3 bg-gray-50 rounded-lg">
-                                                <p class="text-sm text-gray-700 whitespace-pre-line">
-                                                    {{ $history->notes }}</p>
+                                                <!-- Render HTML content from RichEditor -->
+                                                <div
+                                                    class="text-sm text-gray-700 prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-headings:my-2">
+                                                    {!! $history->notes !!}
+                                                </div>
                                             </div>
                                         @endif
                                     </div>
@@ -166,11 +169,74 @@
                 @if ($report->attachments && count($report->attachments) > 0)
                     <div>
                         <x-label>Lampiran ({{ count($report->attachments) }} file)</x-label>
-                        <div class="mt-2 space-y-2">
+                        <div class="mt-2 space-y-4">
                             @foreach ($report->attachments as $attachment)
-                                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
-                                    <x-icon name="paper-clip" class="w-5 h-5 text-gray-400 mr-3" />
-                                    <span class="text-gray-800">{{ basename($attachment) }}</span>
+                                @php
+                                    $filePath = $attachment;
+                                    $fileName = basename($attachment);
+                                    $fileExtension = strtolower(pathinfo($attachment, PATHINFO_EXTENSION));
+                                    $fileUrl = Storage::url($attachment);
+                                @endphp
+
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    @if (in_array($fileExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp']))
+                                        <!-- Image files -->
+                                        <div class="mt-3">
+                                            <img src="{{ $fileUrl }}" alt="{{ $fileName }}"
+                                                class="w-full max-w-md rounded-lg shadow-sm border">
+                                        </div>
+                                    @elseif ($fileExtension === 'pdf')
+                                        <!-- PDF files -->
+                                        <div class="mt-3">
+                                            <div class="bg-white rounded-lg border shadow-sm overflow-hidden">
+                                                <iframe src="{{ $fileUrl }}" height="600px"
+                                                    class="w-full border-0" title="PDF Viewer - {{ $fileName }}">
+                                                    <p class="p-4 text-center text-gray-500">
+                                                        Browser Anda tidak mendukung tampilan PDF.
+                                                        <a href="{{ $fileUrl }}" target="_blank"
+                                                            class="text-blue-600 hover:underline">
+                                                            Klik di sini untuk membuka PDF
+                                                        </a>
+                                                    </p>
+                                                </iframe>
+                                            </div>
+                                        </div>
+                                    @elseif (in_array($fileExtension, ['doc', 'docx']))
+                                        <!-- Word documents -->
+                                        <div class="mt-3">
+                                            <div
+                                                class="flex items-center justify-center p-6 bg-blue-50 rounded-lg border-2 border-dashed border-blue-200">
+                                                <div class="text-center">
+                                                    <x-icon name="document-text"
+                                                        class="w-12 h-12 text-blue-400 mx-auto mb-2" />
+                                                    <p class="text-sm text-gray-600 mb-3">Dokumen Word</p>
+                                                    <a href="{{ $fileUrl }}" download="{{ $fileName }}"
+                                                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                                        <x-icon name="download" class="w-4 h-4 mr-2" />
+                                                        Download File
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <!-- Other file types -->
+                                        <div class="mt-3">
+                                            <div
+                                                class="flex items-center justify-center p-6 bg-gray-100 rounded-lg border-2 border-dashed border-gray-200">
+                                                <div class="text-center">
+                                                    <x-icon name="document"
+                                                        class="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                                                    <p class="text-sm text-gray-600 mb-3">File
+                                                        {{ strtoupper($fileExtension) }}</p>
+                                                    <a href="{{ $fileUrl }}" download="{{ $fileName }}"
+                                                        class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors">
+                                                        <x-icon name="download" class="w-4 h-4 mr-2" />
+                                                        Download File
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>

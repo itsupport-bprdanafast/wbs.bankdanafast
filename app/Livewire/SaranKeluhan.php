@@ -27,6 +27,8 @@ class SaranKeluhan extends Component
     public function submit()
     {
         try {
+            $this->validate();
+
             $report = Report::create([
                 'type' => 'saran_keluhan',
                 'reporter_name' => $this->reporter_name,

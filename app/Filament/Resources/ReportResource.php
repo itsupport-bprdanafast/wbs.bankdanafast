@@ -131,9 +131,8 @@ class ReportResource extends Resource
                                     ->label('Waktu Respon'),
                             ]),
 
-                        Forms\Components\Textarea::make('admin_notes')
-                            ->label('Catatan Admin')
-                            ->rows(3),
+                        Forms\Components\RichEditor::make('admin_notes')
+                            ->label('Catatan Admin'),
                     ]),
             ]);
     }
@@ -189,6 +188,10 @@ class ReportResource extends Resource
                     ->date()
                     ->sortable()
                     ->toggleable(),
+
+                TextColumn::make('admin_notes')
+                    ->label('Catatan Admin')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('responded_at')
                     ->label('Waktu Respon')
@@ -270,12 +273,24 @@ class ReportResource extends Resource
                     ->color('danger')
                     ->visible(fn($record) => $record->status === 'reviewing')
                     ->form([
-                        Forms\Components\Textarea::make('admin_notes')
+                        Forms\Components\RichEditor::make('admin_notes')
                             ->label('Alasan Penolakan')
                             ->placeholder('Masukkan alasan penolakan laporan...')
-                            ->rows(3)
                             ->required()
-                            ->maxLength(1000),
+                            ->maxLength(5000)
+                            ->toolbarButtons([
+                                'bold',
+                                'italic',
+                                'underline',
+                                'strike',
+                                'bulletList',
+                                'orderedList',
+                                'h2',
+                                'h3',
+                                'blockquote',
+                                'codeBlock',
+                            ])
+                            ->columnSpanFull(),
                     ])
                     ->modalHeading('Tolak Laporan')
                     ->modalDescription('Silakan masukkan alasan penolakan untuk laporan ini.')
@@ -294,43 +309,34 @@ class ReportResource extends Resource
                             ->send();
                     }),
 
-                Tables\Actions\Action::make('create_report')
-                    ->label('Buat Laporan')
-                    ->icon('heroicon-o-document-text')
-                    ->color('primary')
+                Tables\Actions\Action::make('resolve_report')
+                    ->label('Selesaikan')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
                     ->visible(fn($record) => $record->status === 'investigating')
                     ->form([
-                        Forms\Components\Textarea::make('admin_notes')
+                        Forms\Components\RichEditor::make('admin_notes')
                             ->label('Catatan Admin')
                             ->placeholder('Masukkan catatan hasil investigasi...')
-                            ->rows(4)
                             ->required()
-                            ->maxLength(1000),
+                            ->maxLength(5000)
+                            ->toolbarButtons([
+                                'bold',
+                                'italic',
+                                'underline',
+                                'strike',
+                                'bulletList',
+                                'orderedList',
+                                'h2',
+                                'h3',
+                                'blockquote',
+                                'codeBlock',
+                            ])
+                            ->columnSpanFull(),
                     ])
-                    ->modalHeading('Buat Laporan Investigasi')
-                    ->modalDescription('Silakan masukkan catatan hasil investigasi untuk laporan ini.')
-                    ->modalSubmitActionLabel('Selesai')
-                    ->modalCancelActionLabel('Batal')
-                    ->extraModalFooterActions([
-                        Tables\Actions\Action::make('reject')
-                            ->label('Tolak')
-                            ->color('danger')
-                            ->requiresConfirmation()
-                            ->modalHeading('Tolak Laporan')
-                            ->modalDescription('Apakah Anda yakin ingin menolak laporan ini?')
-                            ->action(function ($record, array $data) {
-                                $record->update([
-                                    'status' => 'rejected',
-                                    'admin_notes' => $data['admin_notes'] ?? null,
-                                    'responded_at' => now(),
-                                ]);
-
-                                \Filament\Notifications\Notification::make()
-                                    ->title('Laporan telah ditolak')
-                                    ->danger()
-                                    ->send();
-                            })
-                    ])
+                    ->modalHeading('Selesaikan Laporan')
+                    ->modalDescription('Silakan masukkan catatan hasil investigasi.')
+                    ->modalSubmitActionLabel('Selesaikan Laporan')
                     ->action(function ($record, array $data) {
                         $record->update([
                             'status' => 'resolved',
@@ -341,6 +347,48 @@ class ReportResource extends Resource
                         \Filament\Notifications\Notification::make()
                             ->title('Laporan berhasil diselesaikan')
                             ->success()
+                            ->send();
+                    }),
+
+                // Action untuk reject (terpisah)
+                Tables\Actions\Action::make('reject_investigation')
+                    ->label('Tolak')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn($record) => $record->status === 'investigating')
+                    ->form([
+                        Forms\Components\RichEditor::make('admin_notes')
+                            ->label('Alasan Penolakan')
+                            ->placeholder('Masukkan alasan penolakan laporan...')
+                            ->required()
+                            ->maxLength(5000)
+                            ->toolbarButtons([
+                                'bold',
+                                'italic',
+                                'underline',
+                                'strike',
+                                'bulletList',
+                                'orderedList',
+                                'h2',
+                                'h3',
+                                'blockquote',
+                                'codeBlock',
+                            ])
+                            ->columnSpanFull(),
+                    ])
+                    ->modalHeading('Tolak Laporan')
+                    ->modalDescription('Silakan masukkan alasan penolakan.')
+                    ->modalSubmitActionLabel('Tolak Laporan')
+                    ->action(function ($record, array $data) {
+                        $record->update([
+                            'status' => 'rejected',
+                            'admin_notes' => $data['admin_notes'],
+                            'responded_at' => now(),
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Laporan telah ditolak')
+                            ->danger()
                             ->send();
                     }),
 

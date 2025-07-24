@@ -24,7 +24,7 @@ return new class extends Migration
             $table->date('date_incidents')->nullable();
             $table->decimal('gratification_value', 12, 2, true)->nullable();
             $table->enum('status', ['pending', 'reviewing', 'investigating', 'resolved', 'rejected'])->default('pending');
-            $table->text('admin_notes')->nullable();
+            $table->longText('admin_notes')->nullable();
             $table->timestamp('responded_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
